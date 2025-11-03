@@ -6,7 +6,6 @@
 
 import { OAuthProvider } from './oauth-manager.js';
 import { OAuthToken, TokenStore } from './types.js';
-import { HistoryItemWithoutId } from '../ui/types.js';
 import { DebugLogger } from '@vybestack/llxprt-code-core';
 
 export class OcaOAuthProvider implements OAuthProvider {
@@ -14,20 +13,9 @@ export class OcaOAuthProvider implements OAuthProvider {
   private currentToken: OAuthToken | null = null;
   private tokenStore?: TokenStore;
   private logger: DebugLogger;
-  private _addItem?: (
-    itemData: Omit<HistoryItemWithoutId, 'id'>,
-    baseTimestamp: number,
-  ) => number;
 
-  constructor(
-    tokenStore?: TokenStore,
-    addItem?: (
-      itemData: Omit<HistoryItemWithoutId, 'id'>,
-      baseTimestamp: number,
-    ) => number,
-  ) {
+  constructor(tokenStore?: TokenStore) {
     this.tokenStore = tokenStore;
-    this._addItem = addItem;
     this.logger = new DebugLogger('llxprt:auth:oca');
 
     if (!tokenStore) {
@@ -38,13 +26,7 @@ export class OcaOAuthProvider implements OAuthProvider {
     }
   }
 
-  setAddItem(
-    addItem: (
-      itemData: Omit<HistoryItemWithoutId, 'id'>,
-      baseTimestamp: number,
-    ) => number,
-  ): void {
-    this._addItem = addItem;
+  setAddItem(): void {
   }
 
   async initializeToken(): Promise<void> {
