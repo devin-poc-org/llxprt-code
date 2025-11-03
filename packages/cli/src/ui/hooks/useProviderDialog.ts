@@ -9,7 +9,12 @@ import { getProviderManager } from '../../providers/providerManagerInstance.js';
 import { MessageType } from '../types.js';
 import { useAppDispatch } from '../contexts/AppDispatchContext.js';
 import { AppState } from '../reducers/appReducer.js';
-import { AuthType, Config } from '@vybestack/llxprt-code-core';
+import {
+  AuthType,
+  Config,
+  DEFAULT_INTERNAL_OCA_BASE_URL,
+  DEFAULT_EXTERNAL_OCA_BASE_URL,
+} from '@vybestack/llxprt-code-core';
 
 const PROVIDER_SWITCH_EPHEMERAL_KEYS = [
   'auth-key',
@@ -105,6 +110,19 @@ export const useProviderDialog = ({
         // Provider-specific defaults (e.g., qwen base URL)
         if (providerName === 'qwen') {
           const baseUrl = 'https://portal.qwen.ai/v1';
+          config.setEphemeralSetting('base-url', baseUrl);
+          activeProvider.setBaseUrl?.(baseUrl);
+        }
+
+        if (providerName === 'oca') {
+          const ocaMode = config.getEphemeralSetting('oca-mode') as
+            | string
+            | undefined;
+          const mode = ocaMode === 'internal' ? 'internal' : 'external';
+          const baseUrl =
+            mode === 'internal'
+              ? DEFAULT_INTERNAL_OCA_BASE_URL
+              : DEFAULT_EXTERNAL_OCA_BASE_URL;
           config.setEphemeralSetting('base-url', baseUrl);
           activeProvider.setBaseUrl?.(baseUrl);
         }

@@ -45,6 +45,8 @@ export const ephemeralSettingHelp: Record<string, string> = {
     'Maximum number of turns allowed per prompt before stopping (default: 100, -1 for unlimited)',
   authOnly:
     'Force providers to use OAuth authentication only, ignoring API keys and environment variables',
+  'oca-mode':
+    'Oracle Code Assist mode: internal (for Oracle employees) or external (default: external)',
 };
 
 const validEphemeralKeys = Object.keys(ephemeralSettingHelp);
@@ -199,6 +201,19 @@ export function parseEphemeralSettingValue(
         message: `authOnly must be either 'true' or 'false'`,
       };
     }
+  }
+
+  if (key === 'oca-mode') {
+    const validModes = ['internal', 'external'];
+    const value = parsedValue as string;
+    const normalizedValue = value.toLowerCase();
+    if (!validModes.includes(normalizedValue)) {
+      return {
+        success: false,
+        message: `Invalid OCA mode '${parsedValue}'. Valid modes are: ${validModes.join(', ')}`,
+      };
+    }
+    parsedValue = normalizedValue;
   }
 
   if (key === 'streaming') {

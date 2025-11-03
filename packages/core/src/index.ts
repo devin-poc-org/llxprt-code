@@ -168,6 +168,12 @@ export { ConversationCache } from './providers/openai/ConversationCache.js';
 export { getOpenAIProviderInfo } from './providers/openai/getOpenAIProviderInfo.js';
 export { AnthropicProvider } from './providers/anthropic/AnthropicProvider.js';
 export { GeminiProvider } from './providers/gemini/GeminiProvider.js';
+export { OcaProvider } from './providers/oca/OcaProvider.js';
+export type { OcaConfig } from './providers/oca/types.js';
+export {
+  DEFAULT_INTERNAL_OCA_BASE_URL,
+  DEFAULT_EXTERNAL_OCA_BASE_URL,
+} from './providers/oca/constants.js';
 export * from './providers/ProviderManager.js';
 export * from './providers/errors.js';
 
