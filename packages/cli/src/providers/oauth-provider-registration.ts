@@ -7,6 +7,7 @@
 import { GeminiOAuthProvider } from '../auth/gemini-oauth-provider.js';
 import { QwenOAuthProvider } from '../auth/qwen-oauth-provider.js';
 import { AnthropicOAuthProvider } from '../auth/anthropic-oauth-provider.js';
+import { OcaOAuthProvider } from '../auth/oca-oauth-provider.js';
 import { MultiProviderTokenStore } from '../auth/types.js';
 import { OAuthManager } from '../auth/oauth-manager.js';
 import { HistoryItemWithoutId } from '../ui/types.js';
@@ -44,6 +45,9 @@ export function ensureOAuthProviderRegistered(
       break;
     case 'anthropic':
       oauthProvider = new AnthropicOAuthProvider(tokenStore);
+      break;
+    case 'oca':
+      oauthProvider = new OcaOAuthProvider(tokenStore);
       break;
     default:
       return; // No OAuth provider needed for this provider name

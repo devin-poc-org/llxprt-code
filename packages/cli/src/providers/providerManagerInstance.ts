@@ -11,6 +11,7 @@ import {
   OpenAIResponsesProvider,
   AnthropicProvider,
   GeminiProvider,
+  OcaProvider,
   sanitizeForByteString,
   needsSanitization,
   getSettingsService,
@@ -345,6 +346,19 @@ export function getProviderManager(
       );
     }
 
+    providerManagerInstance.registerProvider(
+      getOcaProvider(oauthManager, config),
+    );
+
+    if (oauthManager && tokenStore) {
+      void ensureOAuthProviderRegistered(
+        'oca',
+        oauthManager,
+        tokenStore,
+        addItem,
+      );
+    }
+
     // Set default provider to gemini
     providerManagerInstance.setActiveProvider('gemini');
   }
@@ -569,4 +583,33 @@ function getAnthropicProvider(
   );
   return anthropicProvider;
 }
+
+function getOcaProvider(
+  oauthManager: OAuthManager,
+  config?: Config,
+): OcaProvider {
+  const ocaProviderConfig = {
+    allowBrowserEnvironment: false,
+    ocaConfig: {
+      mode: 'external' as const,
+    },
+    getEphemeralSettings: config
+      ? () => config.getEphemeralSettings()
+      : undefined,
+  };
+
+  const ocaProvider = new OcaProvider(
+    undefined,
+    undefined,
+    ocaProviderConfig,
+    oauthManager,
+  );
+
+  if (config && ocaProvider.setConfig) {
+    ocaProvider.setConfig(config);
+  }
+
+  return ocaProvider;
+}
+
 export { getProviderManager as providerManager };
