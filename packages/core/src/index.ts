@@ -185,6 +185,7 @@ export { ConversationCache } from './providers/openai/ConversationCache.js';
 export { getOpenAIProviderInfo } from './providers/openai/getOpenAIProviderInfo.js';
 export { AnthropicProvider } from './providers/anthropic/AnthropicProvider.js';
 export { GeminiProvider } from './providers/gemini/GeminiProvider.js';
+export { OcaProvider } from './providers/oca/OcaProvider.js';
 export * from './providers/ProviderManager.js';
 export * from './providers/errors.js';
 
