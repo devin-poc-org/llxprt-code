@@ -17,6 +17,7 @@ import {
   createProviderRuntimeContext,
   getSettingsService,
 } from '@vybestack/llxprt-code-core';
+import { OcaProvider } from '@vybestack/llxprt-code-core/providers/oca';
 import { IFileSystem, NodeFileSystem } from './IFileSystem.js';
 import {
   Settings,
@@ -332,6 +333,21 @@ export function createProviderManager(
     addItem,
   );
 
+  manager.registerProvider(
+    getOcaProvider(
+      authOnlyEnabled,
+      oauthManager,
+      allowBrowserEnvironment,
+    ),
+  );
+
+  void ensureOAuthProviderRegistered(
+    'oca',
+    oauthManager,
+    tokenStore,
+    addItem,
+  );
+
   manager.setActiveProvider('gemini');
   attachAddItemToOAuthProviders(oauthManager, addItem);
 
@@ -598,4 +614,25 @@ function getAnthropicProvider(
     oauthManager,
   );
   return anthropicProvider;
+}
+
+function getOcaProvider(
+  authOnlyEnabled: boolean,
+  oauthManager: OAuthManager,
+  allowBrowserEnvironment: boolean,
+): OcaProvider {
+  let ocaApiKey: string | undefined;
+
+  if (!authOnlyEnabled && process.env.OCA_API_KEY) {
+    ocaApiKey = sanitizeApiKey(process.env.OCA_API_KEY);
+  }
+
+  const ocaBaseUrl = process.env.OCA_BASE_URL;
+  const ocaProvider = new OcaProvider(
+    ocaApiKey || undefined,
+    ocaBaseUrl,
+    { allowBrowserEnvironment },
+    oauthManager,
+  );
+  return ocaProvider;
 }

@@ -58,6 +58,11 @@ const PROVIDER_CAPABILITY_HINTS: Record<
     hasApiKeyConfig: true,
     hasBaseUrlConfig: true,
   },
+  oca: {
+    hasModelSelection: true,
+    hasApiKeyConfig: true,
+    hasBaseUrlConfig: true,
+  },
 };
 
 interface ProviderManagerInit {
