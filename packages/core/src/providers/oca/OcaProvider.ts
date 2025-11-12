@@ -82,7 +82,7 @@ export class OcaProvider extends BaseProvider implements IProvider {
     baseURL: string,
     taskId?: string,
   ): OpenAI {
-    const self = this;
+    const logger = this.getLogger();
     
     return new (class OCAOpenAI extends OpenAI {
       protected override async prepareOptions(opts: FinalRequestOptions<unknown>): Promise<void> {
@@ -95,14 +95,14 @@ export class OcaProvider extends BaseProvider implements IProvider {
         const ocaHeaders = await createOcaHeaders(authToken, taskId);
         opts.headers = { ...opts.headers, ...ocaHeaders };
         
-        self.getLogger().debug(() => `Making request with opc-request-id: ${opts.headers?.['opc-request-id']}`);
+        logger.debug(() => `Making request with opc-request-id: ${opts.headers?.['opc-request-id']}`);
         
         return super.prepareOptions(opts);
       }
 
       protected override makeStatusError(
         status: number | undefined,
-        error: Object | undefined,
+        error: object | undefined,
         message: string | undefined,
         headers: OpenAIHeaders | undefined,
       ): APIError {
@@ -119,7 +119,8 @@ export class OcaProvider extends BaseProvider implements IProvider {
             if (ociErr.code !== undefined && ociErr.message !== undefined) {
               ociErrorMessage = `${ociErr.code}: ${ociErr.message}`;
             }
-          } catch {
+          } catch (err) {
+            void err;
           }
         }
         
@@ -363,7 +364,7 @@ export class OcaProvider extends BaseProvider implements IProvider {
     const cacheControl = usePromptCache ? { cache_control: { type: 'ephemeral' } } : undefined;
 
     if (cacheControl && formattedMessages[0]?.role === 'system') {
-      (formattedMessages[0] as any).cache_control = cacheControl.cache_control;
+      (formattedMessages[0] as OpenAI.Chat.ChatCompletionSystemMessageParam & { cache_control?: unknown }).cache_control = cacheControl.cache_control;
     }
 
     if (cacheControl) {
@@ -378,10 +379,10 @@ export class OcaProvider extends BaseProvider implements IProvider {
       const secondLastUserMsgIndex = userMsgIndices[userMsgIndices.length - 2];
       
       if (lastUserMsgIndex !== undefined) {
-        (formattedMessages[lastUserMsgIndex] as any).cache_control = cacheControl.cache_control;
+        (formattedMessages[lastUserMsgIndex] as OpenAI.Chat.ChatCompletionUserMessageParam & { cache_control?: unknown }).cache_control = cacheControl.cache_control;
       }
       if (secondLastUserMsgIndex !== undefined) {
-        (formattedMessages[secondLastUserMsgIndex] as any).cache_control = cacheControl.cache_control;
+        (formattedMessages[secondLastUserMsgIndex] as OpenAI.Chat.ChatCompletionUserMessageParam & { cache_control?: unknown }).cache_control = cacheControl.cache_control;
       }
     }
 
@@ -394,8 +395,8 @@ export class OcaProvider extends BaseProvider implements IProvider {
       },
     }));
 
-    const makeRequest = async () => {
-      return await client.chat.completions.create({
+    const makeRequest = async () => 
+      await client.chat.completions.create({
         model: modelId,
         messages: formattedMessages,
         temperature,
@@ -405,8 +406,7 @@ export class OcaProvider extends BaseProvider implements IProvider {
         ...(thinkingConfig && { thinking: thinkingConfig }),
         ...(tools && tools.length > 0 && { tools }),
         ...(taskId && { litellm_session_id: `cline-${taskId}` }),
-      } as any);
-    };
+      } as OpenAI.Chat.ChatCompletionCreateParamsStreaming);
 
     const stream = await retryWithBackoff(makeRequest, {
       maxAttempts: 3,
@@ -417,8 +417,7 @@ export class OcaProvider extends BaseProvider implements IProvider {
     const inputCost = (await this.calculateCost(client, authToken, modelId, 1e6, 0, taskId)) || 0;
     const outputCost = (await this.calculateCost(client, authToken, modelId, 0, 1e6, taskId)) || 0;
 
-    let accumulatedText = '';
-    let accumulatedToolCalls: Array<{
+    const accumulatedToolCalls: Array<{
       index: number;
       id?: string;
       name?: string;
@@ -430,7 +429,6 @@ export class OcaProvider extends BaseProvider implements IProvider {
 
       // Handle normal text content
       if (delta?.content) {
-        accumulatedText += delta.content;
         yield {
           role: 'assistant',
           parts: [
@@ -442,13 +440,18 @@ export class OcaProvider extends BaseProvider implements IProvider {
         };
       }
 
-      if ((delta as any)?.thinking) {
+      // Handle reasoning/thinking
+      interface DeltaWithThinking {
+        thinking?: string;
+      }
+      const deltaWithThinking = delta as DeltaWithThinking;
+      if (deltaWithThinking?.thinking) {
         yield {
           role: 'assistant',
           parts: [
             {
               type: 'text',
-              text: `[Thinking: ${(delta as any).thinking}]`,
+              text: `[Thinking: ${deltaWithThinking.thinking}]`,
             },
           ],
         };
